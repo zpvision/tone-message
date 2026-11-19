@@ -1,0 +1,15 @@
+# Base unit follows the official Linux manual installation instructions.
+# Operational settings are managed in ollama-override.conf (systemd drop-in).
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

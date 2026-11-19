@@ -1,0 +1,11 @@
+# Exact installed versions, including transitive dependencies: requirements.lock.txt
+fastapi
+uvicorn
+httpx
+pydantic-settings
+numpy
+openpyxl
+python-multipart
+defusedxml
+tokenizers
+# CUDA PyTorch is installed separately with deploy/install-python.sh.

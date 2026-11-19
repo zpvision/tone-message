@@ -1,0 +1,29 @@
+[Unit]
+Description=FinKoper AI backend
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=finkoper-ai
+Group=finkoper-ai
+WorkingDirectory=/opt/finkoper-ai
+EnvironmentFile=/etc/finkoper-ai/finkoper-ai.env
+ExecStart=/opt/finkoper-ai/venv/bin/python -m app
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+KillMode=control-group
+TimeoutStopSec=45
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=finkoper-ai
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+# Keep CUDA device access available; do not enable PrivateDevices.
+
+[Install]
+WantedBy=multi-user.target

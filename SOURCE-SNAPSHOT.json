@@ -1,0 +1,17 @@
+{
+  "source_commit": "f97a699fce417dac211edfa3014b83ef035315ae",
+  "snapshot": "current sentiment service source; sanitized publication",
+  "excluded": [
+    "production env/secrets",
+    "runtime databases and client data",
+    "models and virtual environments",
+    "operational reports and original Git history"
+  ],
+  "sanitization": [
+    "deployment IP/domain/username examples",
+    "server report destinations",
+    "unused source_job metadata",
+    "public README"
+  ],
+  "runtime_note": "app classification logic and system prompt unchanged"
+}

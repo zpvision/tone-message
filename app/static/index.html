@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FinKoper AI · Тестирование XLSX</title>
+  <link rel="stylesheet" href="/static/cabinet.css">
+  <script src="/static/cabinet.js" defer></script>
+</head>
+<body>
+<header><div class="brand"><span class="mark">fk</span><div>FinKoper <b>AI</b><small>Лаборатория качества и скорости</small></div></div><span class="chip" id="ready">Проверяем модель…</span></header>
+<main>
+  <div class="intro"><div><p class="eyebrow">AI FinKoper</p><h1>От таблицы к результату</h1><p>Проверяйте тональность на своих данных. Меняйте промпт, сравнивайте ответы и измеряйте время.</p></div><span class="badge">Тестовый кабинет</span></div>
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <div class="layout">
+    <div class="configuration">
+      <section class="card"><h2><span class="step">1</span>Данные</h2>
+        <label class="drop" for="file"><strong>Выберите книгу Excel</strong><span>.xlsx · до 30 МБ · до 50 000 строк</span><input id="file" type="file" accept=".xlsx"></label>
+        <p id="fileInfo" class="muted">Оригинал остаётся неизменным. Результат — отдельная копия книги.</p>
+        <div class="row"><label>Лист<select id="sheet" disabled></select></label><label>Колонка с сообщениями<select id="column" disabled></select></label></div>
+        <label class="check"><input type="checkbox" id="headers" checked>Первая строка — заголовки</label>
+        <div class="row"><label>Обрабатывать<select id="scope"><option value="first">Первые N строк</option><option value="all">Весь лист</option></select></label><label>Число строк<input id="limit" type="number" min="1" max="50000" value="100"></label></div>
+        <p id="rowInfo" class="muted">Загрузите файл для выбора листа и предпросмотра.</p>
+        <details><summary>Предпросмотр первых 10 строк</summary><div class="table-scroll"><table id="preview"><thead></thead><tbody></tbody></table></div></details>
+      </section>
+      <section class="card"><h2><span class="step">2</span>Промпты</h2>
+        <label>Системный промпт<textarea id="system" rows="8" maxlength="12000"></textarea></label>
+        <label>Шаблон пользовательского сообщения<textarea id="template" rows="3" maxlength="12000"></textarea></label>
+        <p class="muted">Подставляется только <code>{text}</code>. Другие фигурные скобки остаются обычным текстом.</p>
+        <div class="actions"><button id="savePrompt" class="secondary">Сохранить промпт</button><button id="restorePrompt" class="quiet">Вернуть сохранённый</button></div>
+        <label>Сохранённые версии<select id="promptVersions"><option value="">Нет сохранённых версий</option></select></label>
+        <p class="muted">Это стартовый тестовый промпт. Изменения редактора не влияют на уже запущенное задание.</p>
+      </section>
+      <section class="card"><h2><span class="step">3</span>Настройки запуска</h2>
+        <div class="grid3"><label>Temperature<input id="temperature" type="number" min="0" max="2" step="0.1" value="0"></label><label>Контекст, токенов<select id="numCtx"><option>1024</option><option>2048</option><option selected>4096</option></select></label><label>Лимит ответа<input id="numPredict" type="number" min="16" max="512" value="128"></label><label>HTTP-запросов<select id="concurrency"><option>1</option><option>2</option><option>4</option></select></label><label>Таймаут, секунд<input id="timeout" type="number" min="10" max="600" value="180"></label><label class="check"><input id="thinking" type="checkbox">Thinking</label></div>
+        <div class="hint"><strong id="parallel">Ollama NUM_PARALLEL: …</strong><p>Общий лимит API и кабинета: один inference-запрос одновременно. Исполнители 2 или 4 ожидают общий lock; это не параллельные GPU-вычисления. При активном API-пакете запуск XLSX временно недоступен. Глобальные настройки Ollama не меняются.</p></div>
+        <p class="muted">Длинные сообщения получают явную ошибку. Прогрев измеряется отдельно и исключается из основной скорости. При Thinking часть лимита ответа может уйти на рассуждение.</p>
+        <button id="start" class="primary" disabled>Запустить тест <span>→</span></button>
+      </section>
+    </div>
+    <aside><section class="card live"><div class="section-head"><h2>Текущий запуск</h2><span class="dot"></span></div>
+      <div id="emptyJob" class="empty"><span>↗</span><h3>Всё готово к первому тесту</h3><p>Выберите таблицу и колонку с сообщениями. Начните со 100–200 строк.</p></div>
+      <div id="jobPanel" hidden>
+        <div class="section-head"><strong id="jobState"></strong><small id="jobId"></small></div><p id="jobFile" class="muted"></p>
+        <progress id="progress" max="1" value="0"></progress><p id="progressText"></p>
+        <div class="numbers"><div><strong id="rate">—</strong><span>завершённых запросов / мин</span></div><div><strong id="elapsed">—</strong><span>общее активное время</span></div></div>
+        <dl id="jobStats"></dl><div class="hint" id="resources">Телеметрия появится во время задания.</div>
+        <p id="jobError" class="error-text"></p>
+        <div class="actions"><button id="stop" class="danger" hidden>Остановить</button><button id="resume" class="secondary" hidden>Продолжить необработанные</button><button id="partialExport" class="secondary" hidden>Подготовить частичный результат</button></div>
+        <div class="actions" id="downloads" hidden><a id="xlsx" class="button primary" download>Скачать XLSX</a><a id="jsonl" class="button secondary" download>JSONL</a><a id="metrics" class="button quiet" download>Метрики JSON</a></div>
+        <details><summary>Последние обработанные строки</summary><div class="table-scroll"><table id="recent"><thead><tr><th>Строка</th><th>Статус</th><th>Метка / ответ</th></tr></thead><tbody></tbody></table></div></details>
+        <details><summary>Неизменяемые параметры запуска</summary><pre id="snapshot"></pre></details>
+      </div><p class="muted footnote">Можно закрыть страницу: задание продолжится на сервере. После перезапуска backend оно будет отмечено как прерванное.</p>
+    </section></aside>
+  </div>
+  <section class="card"><div class="section-head"><h2>История запусков</h2><button id="refresh" class="quiet">Обновить</button></div><div class="table-scroll"><table id="history"><thead><tr><th>Дата</th><th>Файл</th><th>Состояние</th><th>Действия</th></tr></thead><tbody></tbody></table></div><p class="muted">Сохраняются промпты, настройки и результаты каждой строки. JSONL содержит полные ответы; метрики JSON — попытки и телеметрию.</p></section>
+  <footer>FinKoper AI · HTTPS · Кабинет с Basic Auth.<br>Сложное оформление Excel может измениться. Без заголовков добавляется первая строка, исходные данные сдвигаются на +1. Формулы и внешние ссылки сервер не вычисляет.</footer>
+</main>
+</body></html>
